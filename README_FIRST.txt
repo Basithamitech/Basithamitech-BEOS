@@ -1,14 +1,12 @@
-BEOS BUILD 011 — SPRINT 2
+BEOS BUILD 011 — SPRINT 2 PORTABLE
 
-Enterprise Core Engine release.
+1. Extract this ZIP completely.
+2. Double-click START_BEOS_BUILD_011_SPRINT_2.bat.
+3. The launcher will open BEOS in your browser.
 
-SOURCE:
-1. Open a terminal in this folder.
-2. Run: npm install
-3. Run: npm run dev
-
-PORTABLE:
-Use the separate portable package and run START_BEOS_BUILD_011_SPRINT_2.bat.
-
-This release introduces one central claim engine controlling workflow, readiness,
-technical logic, report locking and decision overrides.
+Sprint 2 includes:
+- Central Claim Engine
+- Unified workflow and readiness
+- Report-generation locking
+- Technical contradiction overrides
+- Canonical claim identification
