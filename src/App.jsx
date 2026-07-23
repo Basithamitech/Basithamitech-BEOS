@@ -1,235 +1,74 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Routes, Route, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  AppBar, Avatar, Box, Button, Card, CardContent, Chip, Dialog, DialogActions,
-  DialogContent, DialogTitle, Divider, Drawer, LinearProgress, List, ListItemButton,
-  ListItemText, MenuItem, Select, Stack, Table, TableBody, TableCell, TableHead,
-  TableRow, TextField, Toolbar, Tooltip, Typography
-} from '@mui/material';
+  Navigate,
+  Route,
+  Routes
+} from "react-router-dom";
 
-const drawerWidth = 292;
-const gold = '#C8A23A';
-const menu = [
-  ['Dashboard','/dashboard'],['Claims','/claims'],['Commercial','/commercial'],
-  ['Procurement','/procurement'],['Projects','/projects'],['Documents','/documents'],
-  ['Knowledge Base','/knowledge'],['Administration','/administration']
-];
+import AppShell from "./components/layout/AppShell";
+import DashboardPage from "./modules/dashboard/DashboardPage";
+import ClaimsRegisterPage from "./modules/claims/pages/ClaimsRegisterPage";
+import ClaimWorkspacePage from "./modules/claims/pages/ClaimWorkspacePage";
+import PlaceholderPage from "./modules/common/PlaceholderPage";
 
-const initialClaims = [
- {id:'CLM-2026-005177',claim:'HLB-2026-517777',insured:'Jennifer Naicker',insurer:'Hollard',peril:'Power surge',stage:'Report Review',priority:'High',assessor:'P Getyeza',technician:'Eric Motsumi',location:'Bryanston',policy:'HOC-781955',phone:'082 555 1177',email:'jennifer@example.com',appointment:'18 Jul 2026 10:00',due:'Today 16:00',sla:'4h',value:18450,progress:78,photos:22,docs:14,tasks:3,reportStatus:'Draft review',invoiceStatus:'Not invoiced'},
- {id:'CLM-2026-004919',claim:'HLB-2026-491923',insured:'Sulochani Muthen',insurer:'Hollard',peril:'Lightning',stage:'Awaiting Insurer',priority:'Medium',assessor:'P Getyeza',technician:'Foster Makhubela',location:'Centurion',policy:'HOC-661204',phone:'083 222 4919',email:'sulochani@example.com',appointment:'Completed',due:'19 Jul 2026',sla:'1d',value:36268,progress:88,photos:18,docs:9,tasks:1,reportStatus:'Issued',invoiceStatus:'Pro forma'},
- {id:'CLM-2026-004879',claim:'HLB-2026-487910',insured:'Hendrik Nagel',insurer:'Hollard',peril:'Water ingress',stage:'Testing Required',priority:'High',assessor:'P Getyeza',technician:'Abraham Moagaesi',location:'Pretoria East',policy:'HOC-593018',phone:'078 444 8791',email:'hendrik@example.com',appointment:'18 Jul 2026 13:00',due:'19 Jul 2026',sla:'8h',value:74820,progress:54,photos:31,docs:7,tasks:4,reportStatus:'Not generated',invoiceStatus:'Not invoiced'},
- {id:'CLM-2025-003947',claim:'SHS/2025/394792',insured:'Zintle Nkosi',insurer:'Standard Insurance',peril:'After-repair allegation',stage:'Response Report',priority:'Critical',assessor:'P Getyeza',technician:'—',location:'Bryanston',policy:'SHS-118244',phone:'078 803 1123',email:'zintle@example.com',appointment:'Completed',due:'Today 12:00',sla:'2h overdue',value:0,progress:66,photos:16,docs:21,tasks:5,reportStatus:'Response drafting',invoiceStatus:'N/A'},
- {id:'CLM-2026-005034',claim:'HLB/2026/503370',insured:'Lady Oni',insurer:'Hollard',peril:'Lightning',stage:'BOQ Preparation',priority:'Medium',assessor:'P Getyeza',technician:'Dumisane Nkala',location:'Midrand',policy:'HOC-774030',phone:'072 555 5033',email:'ladyoni@example.com',appointment:'Completed',due:'22 Jul 2026',sla:'3d',value:112900,progress:62,photos:27,docs:12,tasks:2,reportStatus:'Assessment complete',invoiceStatus:'Pending approval'}
-];
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route
+          path="/dashboard"
+          element={<DashboardPage />}
+        />
 
-const workspaceSections = [
- 'Claim Intelligence','Overview','Workflow','Insured','Policy','Appointment','Assessment','Testing','Equipment','Measurements',
- 'Photos','BOQ','Commercial','Procurement','Reports','Decision Overrides','Emails','Documents','Timeline','Audit','AI Assistant'
-];
+        <Route
+          path="/claims"
+          element={<ClaimsRegisterPage />}
+        />
 
-const money=n=>new Intl.NumberFormat('en-ZA',{style:'currency',currency:'ZAR',maximumFractionDigits:0}).format(Number(n)||0);
-const priorityColor=p=>p==='Critical'?'error':p==='High'?'warning':p==='Low'?'success':'default';
-const stageColor=s=>s.includes('Awaiting')?'warning':s.includes('Review')||s.includes('Report')?'info':s.includes('Complete')?'success':'default';
+        <Route
+          path="/claims/:id"
+          element={<ClaimWorkspacePage />}
+        />
 
-function usePersistentState(key, initial){
-  const [state,setState]=useState(()=>{try{const v=localStorage.getItem(key);return v?JSON.parse(v):initial;}catch{return initial;}});
-  useEffect(()=>{try{localStorage.setItem(key,JSON.stringify(state));}catch{}},[key,state]);
-  return [state,setState];
+        <Route
+          path="/commercial"
+          element={<PlaceholderPage title="Commercial" />}
+        />
+
+        <Route
+          path="/procurement"
+          element={<PlaceholderPage title="Procurement" />}
+        />
+
+        <Route
+          path="/projects"
+          element={<PlaceholderPage title="Projects" />}
+        />
+
+        <Route
+          path="/documents"
+          element={<PlaceholderPage title="Documents" />}
+        />
+
+        <Route
+          path="/knowledge"
+          element={<PlaceholderPage title="Knowledge Base" />}
+        />
+
+        <Route
+          path="/administration"
+          element={<PlaceholderPage title="Administration" />}
+        />
+
+        <Route
+          path="/"
+          element={<Navigate to="/dashboard" replace />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/dashboard" replace />}
+        />
+      </Route>
+    </Routes>
+  );
 }
-
-function buildClaimEngine(claim,assessment,tests,equipment,boq,overrides=[]){
- const completedTests=tests.filter(t=>t.status!=='Pending');
- const testingComplete=tests.length>0&&tests.every(t=>t.status!=='Pending');
- const equipmentComplete=equipment.length>0&&equipment.every(e=>e.decision!=='Pending');
- const serialsComplete=equipment.length>0&&equipment.every(e=>e.serial&&!['Pending','Unknown','To confirm'].includes(e.serial));
- const assessmentComplete=Boolean(assessment.findings&&assessment.opinion);
- const recommendationComplete=Boolean(assessment.recommendation&&assessment.recommendation.length>25);
- const outcomeComplete=assessment.outcome!=='Pending';
- const photosComplete=claim.photos>=6;
- const boqComplete=boq.length>0&&boq.some(x=>(+x.rate||0)>0);
- const policyComplete=Boolean(assessment.policy&&assessment.policy.length>25);
- const operational=tests.some(t=>String(t.status).toLowerCase()==='pass'&&String(t.test).toLowerCase().includes('functional'));
- const replace=String(assessment.recommendation||'').toLowerCase().includes('replace');
- const rawConflicts=[];
- if(operational&&replace) rawConflicts.push({id:'FUNCTIONAL_REPLACE',message:'Functional testing records the equipment as operational while the recommendation proposes replacement.',target:'Assessment'});
- if(String(assessment.cause||'').toLowerCase().includes('lightning')&&!tests.some(t=>/spd|surge|earth/i.test(t.test))) rawConflicts.push({id:'LIGHTNING_EVIDENCE',message:'Lightning is recorded as the cause, but no SPD, surge-protection or earthing test is captured.',target:'Testing'});
- const activeConflicts=rawConflicts.filter(c=>!overrides.some(o=>o.ruleId===c.id&&o.active!==false));
- const checks=[
-  {key:'assessment',label:'Assessment',complete:assessmentComplete,target:'Assessment'},
-  {key:'testing',label:'Testing',complete:testingComplete,target:'Testing'},
-  {key:'equipment',label:'Equipment',complete:equipmentComplete&&serialsComplete,target:'Equipment'},
-  {key:'photos',label:'Photographs',complete:photosComplete,target:'Photos'},
-  {key:'boq',label:'BOQ',complete:boqComplete,target:'BOQ'},
-  {key:'recommendation',label:'Recommendation',complete:recommendationComplete,target:'Assessment'},
-  {key:'outcome',label:'Outcome',complete:outcomeComplete,target:'Assessment'},
-  {key:'logic',label:'Technical Logic',complete:activeConflicts.length===0,target:'Claim Intelligence'}
- ];
- const readiness=Math.round(checks.filter(c=>c.complete).length/checks.length*100);
- const reportReady=checks.every(c=>c.complete);
- const workflow=[
-  {name:'Instruction received',complete:true,target:'Policy'},
-  {name:'Appointment scheduled',complete:Boolean(claim.appointment),target:'Appointment'},
-  {name:'Site inspection',complete:photosComplete,target:'Photos'},
-  {name:'Technical testing',complete:testingComplete,target:'Testing'},
-  {name:'Evidence analysis',complete:assessmentComplete,target:'Assessment'},
-  {name:'BOQ prepared',complete:boqComplete,target:'BOQ'},
-  {name:'Technical opinion',complete:Boolean(assessment.opinion&&assessment.opinion.length>25),target:'Assessment'},
-  {name:'Report preparation',complete:reportReady,target:'Reports'},
-  {name:'Invoice and closure',complete:['Paid','Closed','Final invoice paid'].includes(claim.invoiceStatus),target:'Commercial'}
- ];
- const scores={
-  evidence:Math.min(100,Math.round(claim.photos/20*100)),
-  testing:Math.round(completedTests.length/Math.max(1,tests.length)*100),
-  equipment:Math.round(equipment.filter(e=>e.decision!=='Pending'&&e.serial&&!['Pending','Unknown','To confirm'].includes(e.serial)).length/Math.max(1,equipment.length)*100),
-  logic:activeConflicts.length===0?100:Math.max(20,100-activeConflicts.length*35),
-  policy:policyComplete?90:35,
-  commercial:boqComplete?100:20
- };
- const confidence=Math.round(Object.values(scores).reduce((a,b)=>a+b,0)/Object.values(scores).length);
- const missing=checks.filter(c=>!c.complete&&c.key!=='logic');
- const status={
-  report:reportReady?'Ready for controlled generation':assessmentComplete?'Assessment complete – evidence outstanding':'Assessment in progress',
-  workflowProgress:Math.round(workflow.filter(w=>w.complete).length/workflow.length*100),
-  testing:testingComplete?'Complete':'Action required',
-  equipment:(equipmentComplete&&serialsComplete)?'Complete':'Action required',
-  invoice:['Paid','Closed','Final invoice paid'].includes(claim.invoiceStatus)?'Closed':claim.invoiceStatus
- };
- return {checks,readiness,reportReady,workflow,scores,confidence,missing,conflicts:activeConflicts,allConflicts:rawConflicts,status};
-}
-
-function Metric({label,value,note,accent=false}){return <Card sx={{borderTop:accent?`4px solid ${gold}`:'1px solid #e6e6e6'}}><CardContent><Typography variant="overline" color="text.secondary">{label}</Typography><Typography variant="h4" sx={{my:.6,fontWeight:900}}>{value}</Typography><Typography variant="body2" color="text.secondary">{note}</Typography></CardContent></Card>}
-function Info({label,value}){return <Box sx={{py:.8,borderBottom:'1px solid #ececec'}}><Typography variant="caption" color="text.secondary">{label}</Typography><Typography fontWeight={800}>{value||'—'}</Typography></Box>}
-function Panel({title,subtitle,children,action}){return <Card><CardContent><Stack direction={{xs:'column',sm:'row'}} justifyContent="space-between" spacing={1.5} sx={{mb:2}}><Box><Typography variant="h6" fontWeight={900}>{title}</Typography>{subtitle&&<Typography variant="body2" color="text.secondary">{subtitle}</Typography>}</Box>{action}</Stack>{children}</CardContent></Card>}
-function Field({label,value,onChange,multiline=false,rows=3,select=false,children}){return <TextField fullWidth size="small" label={label} value={value} onChange={onChange} multiline={multiline} minRows={rows} select={select}>{children}</TextField>}
-
-function Dashboard(){const nav=useNavigate();return <Box sx={{p:{xs:2,md:4}}}>
- <Stack direction={{xs:'column',md:'row'}} justifyContent="space-between" spacing={2}><Box><Typography variant="h4" fontWeight={900}>Executive Command Centre</Typography><Typography color="text.secondary">Claims, evidence quality, technical delivery, commercial exposure and operational control.</Typography></Box><Stack direction="row" spacing={1}><Chip label="BUILD 011 · SPRINT 2" sx={{fontWeight:900,bgcolor:gold}}/><Chip label="CLAIM OPERATING SYSTEM" variant="outlined"/></Stack></Stack>
- <Box sx={{mt:3,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:2}}><Metric label="Open Claims" value="42" note="8 awaiting assessment" accent/><Metric label="Reports Due" value="11" note="3 due today"/><Metric label="Financial Exposure" value="R 1.84m" note="Across active claims"/><Metric label="Critical Actions" value="5" note="Management attention"/></Box>
- <Box sx={{mt:3,display:'grid',gridTemplateColumns:{xs:'1fr',lg:'2fr 1fr'},gap:2}}><Panel title="Priority claim control" subtitle="Claims requiring intervention"><Box sx={{overflowX:'auto'}}><Table size="small" sx={{minWidth:680}}><TableHead><TableRow><TableCell>Claim</TableCell><TableCell>Insured</TableCell><TableCell>Stage</TableCell><TableCell>SLA</TableCell></TableRow></TableHead><TableBody>{initialClaims.slice(0,4).map(c=><TableRow key={c.id} hover onClick={()=>nav('/claims/'+c.id)} sx={{cursor:'pointer'}}><TableCell sx={{fontWeight:900}}>{c.claim}</TableCell><TableCell>{c.insured}</TableCell><TableCell><Chip size="small" label={c.stage} color={stageColor(c.stage)}/></TableCell><TableCell>{c.sla}</TableCell></TableRow>)}</TableBody></Table></Box></Panel>
- <Panel title="Operational readiness" subtitle="Core workspace controls"><Stack spacing={1.5}><Info label="Digital claim workspace" value="Active"/><Info label="Structured technical assessment" value="Active"/><Info label="BOQ and commercial control" value="Active"/><Info label="Report generation workflow" value="Controlled"/><Info label="Persistent claim data" value="Local prototype storage"/><Button variant="contained" onClick={()=>nav('/claims')}>Open Claims Register</Button></Stack></Panel></Box>
- </Box>}
-
-function Claims(){const nav=useNavigate();const [q,setQ]=useState('');const [view,setView]=useState('All');const [open,setOpen]=useState(false);const visible=useMemo(()=>initialClaims.filter(c=>(c.claim+' '+c.insured+' '+c.peril+' '+c.stage).toLowerCase().includes(q.toLowerCase())&&(view==='All'||c.priority===view||c.stage.includes(view))),[q,view]);return <Box sx={{p:{xs:2,md:3}}}>
- <Stack direction={{xs:'column',md:'row'}} justifyContent="space-between" spacing={2}><Box><Typography variant="h4" fontWeight={900}>Enterprise Claims Register</Typography><Typography color="text.secondary">Select a claim to enter the enterprise assessment cockpit.</Typography></Box><Button variant="contained" onClick={()=>setOpen(true)}>Register New Claim</Button></Stack>
- <Card sx={{mt:2}}><CardContent><Stack direction={{xs:'column',md:'row'}} spacing={1.5}><TextField fullWidth size="small" label="Search claims" value={q} onChange={e=>setQ(e.target.value)}/><Select size="small" value={view} onChange={e=>setView(e.target.value)} sx={{minWidth:190}}>{['All','Critical','High','Report','Testing'].map(x=><MenuItem key={x} value={x}>{x}</MenuItem>)}</Select></Stack><Box sx={{overflowX:'auto',mt:2}}><Table size="small" sx={{minWidth:980}}><TableHead><TableRow>{['Claim','Insured','Peril','Stage','Priority','Assessor','Report','Exposure'].map(x=><TableCell key={x} sx={{fontWeight:900}}>{x}</TableCell>)}</TableRow></TableHead><TableBody>{visible.map(c=><TableRow key={c.id} hover onClick={()=>nav('/claims/'+c.id)} sx={{cursor:'pointer'}}><TableCell sx={{fontWeight:900}}>{c.claim}</TableCell><TableCell>{c.insured}</TableCell><TableCell>{c.peril}</TableCell><TableCell><Chip size="small" label={c.stage} color={stageColor(c.stage)}/></TableCell><TableCell><Chip size="small" label={c.priority} color={priorityColor(c.priority)}/></TableCell><TableCell>{c.assessor}</TableCell><TableCell>{c.reportStatus}</TableCell><TableCell>{money(c.value)}</TableCell></TableRow>)}</TableBody></Table></Box></CardContent></Card>
- <Dialog open={open} onClose={()=>setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Register New Claim</DialogTitle><DialogContent><Stack spacing={2} sx={{mt:1}}><TextField label="Claim number"/><TextField label="Insured"/><TextField label="Insurer"/><TextField label="Reported peril"/><TextField label="Policy number"/></Stack></DialogContent><DialogActions><Button onClick={()=>setOpen(false)}>Cancel</Button><Button variant="contained" onClick={()=>setOpen(false)}>Create Draft Claim</Button></DialogActions></Dialog>
- </Box>}
-
-function ClaimHeader({claim,exposure,engine,onBack}){
- return <Box sx={{bgcolor:'#0e0e0e',color:'#fff',px:{xs:2,md:3},py:2,borderBottom:`4px solid ${gold}`}}>
- <Stack direction={{xs:'column',lg:'row'}} justifyContent="space-between" spacing={2}><Box><Button onClick={onBack} sx={{color:'#ddd',pl:0}}>← Claims Register</Button><Stack direction={{xs:'column',sm:'row'}} alignItems={{sm:'center'}} spacing={1}><Typography variant="h4" fontWeight={900}>{claim.claim}</Typography><Chip size="small" label={claim.priority} color={priorityColor(claim.priority)}/><Chip size="small" label={claim.stage} color={stageColor(claim.stage)}/></Stack><Typography sx={{mt:.5}}>{claim.insured} · {claim.insurer} · {claim.peril}</Typography><Typography variant="caption" color="#aaa">BEOS record: {claim.id} · Canonical insurer claim: {claim.claim}</Typography></Box><Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start"><Chip label="AUTO-SAVED" size="small" sx={{bgcolor:'#234d2d',color:'#fff',fontWeight:900}}/><Button variant="outlined" sx={{color:'#fff',borderColor:'#666'}}>Assign</Button><Button variant="outlined" sx={{color:'#fff',borderColor:'#666'}}>Schedule</Button><Tooltip title={engine.reportReady?'All mandatory controls passed':'Report locked: resolve outstanding evidence, outcome and technical logic controls'}><span><Button variant="contained" disabled={!engine.reportReady}>Generate Report</Button></span></Tooltip></Stack></Stack>
- <Box sx={{mt:2,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:1}}>{[
- ['SLA',claim.sla],['Workflow',`${engine.status.workflowProgress}%`],['Assessor',claim.assessor],['Technician',claim.technician],['Exposure',money(exposure)],['Report',engine.status.report],['Invoice',engine.status.invoice]
- ].map(([l,v])=><Box key={l} sx={{bgcolor:'#1d1d1d',p:1.3,borderRadius:1}}><Typography variant="caption" color="#aaa">{l}</Typography><Typography fontWeight={900}>{v}</Typography></Box>)}</Box><LinearProgress variant="determinate" value={engine.status.workflowProgress} sx={{mt:1.5,height:6,borderRadius:8,bgcolor:'#333'}}/>
- </Box>
-}
-function ClaimWorkspace(){
- const {id}=useParams();const nav=useNavigate();const claim=initialClaims.find(c=>c.id===id)||initialClaims[0];
- const [section,setSection]=useState('Overview');
- const [assessment,setAssessment]=usePersistentState(`beos011s2-${claim.id}-assessment`,{cause:`Reported ${claim.peril.toLowerCase()} event.`,claimed:'Damage as reported by the insured and insurer instruction.',observed:'Visible conditions and damage observations recorded during site inspection.',tests:'Objective testing and measured readings to be recorded.',findings:'Technical findings pending completion of evidence review.',policy:'Policy considerations and exclusions to be assessed.',opinion:'Technical causation opinion pending.',recommendation:'Final insurer recommendation pending.',outcome:'Pending'});
- const [boq,setBoq]=usePersistentState(`beos011s2-${claim.id}-boq`,[{description:'Technical assessment and testing',category:'Labour',qty:1,rate:2850},{description:'Replacement item pending approval',category:'Materials',qty:1,rate:9500}]);
- const [equipment,setEquipment]=usePersistentState(`beos011s2-${claim.id}-equipment`,[{item:'Primary insured item',make:'To confirm',model:'To confirm',serial:'Pending',age:'Unknown',condition:'Under assessment',decision:'Pending'}]);
- const [tests,setTests]=usePersistentState(`beos011s2-${claim.id}-tests`,[{test:'Power supply verification',reading:'230',expected:'220–240',unit:'V AC',status:'Pass',notes:''},{test:'Functional test',reading:'Pending',expected:'Operational',unit:'',status:'Pending',notes:''}]);
- const [overrides,setOverrides]=usePersistentState(`beos011s2-${claim.id}-overrides`,[]);
- const exposure=boq.reduce((s,r)=>s+(+r.qty||0)*(+r.rate||0),0);
- const engine=useMemo(()=>buildClaimEngine(claim,assessment,tests,equipment,boq,overrides),[claim,assessment,tests,equipment,boq,overrides]);
- const recordOverride=(conflict)=>{
-   const reason=window.prompt(`Technical override reason for:\n${conflict.message}\n\nEnter a defensible reason:`);
-   if(!reason||reason.trim().length<10)return;
-   setOverrides([...overrides,{ruleId:conflict.id,message:conflict.message,reason:reason.trim(),assessor:claim.assessor,createdAt:new Date().toLocaleString('en-ZA'),active:true}]);
- };
- const content={
-  'Claim Intelligence':<ClaimIntelligence claim={claim} assessment={assessment} engine={engine} setSection={setSection} onOverride={recordOverride}/>,
-  Overview:<Overview claim={claim} assessment={assessment} exposure={exposure} setSection={setSection}/>,
-  Workflow:<Workflow engine={engine} setSection={setSection}/>,
-  Insured:<Insured claim={claim}/>, Policy:<Policy claim={claim}/>, Appointment:<Appointment claim={claim}/>,
-  Assessment:<Assessment assessment={assessment} setAssessment={setAssessment}/>,
-  Testing:<Testing rows={tests} setRows={setTests}/>, Equipment:<Equipment rows={equipment} setRows={setEquipment}/>,
-  Measurements:<Measurements/>, Photos:<Photos claim={claim}/>, BOQ:<Boq rows={boq} setRows={setBoq}/>,
-  Commercial:<Commercial claim={claim} exposure={exposure}/>, Procurement:<Procurement/>, Reports:<Reports claim={claim} assessment={assessment} engine={engine} setSection={setSection}/>,
-  'Decision Overrides':<DecisionOverrides overrides={overrides} setOverrides={setOverrides}/>,
-  Emails:<Emails claim={claim}/>, Documents:<Documents claim={claim}/>, Timeline:<Timeline claim={claim}/>, Audit:<Audit claim={claim}/>,
-  'AI Assistant':<AiPanel claim={claim} assessment={assessment} setSection={setSection}/>
- }[section];
- return <Box sx={{bgcolor:'#f1f2f4',minHeight:'calc(100vh - 64px)'}}><ClaimHeader claim={claim} exposure={exposure} engine={engine} onBack={()=>nav('/claims')}/>
- <Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',lg:'250px minmax(0,1fr) 310px'},gap:2,p:2,alignItems:'start'}}>
-  <Card sx={{display:{xs:'none',lg:'block'},position:'sticky',top:82,maxHeight:'calc(100vh - 100px)',overflowY:'auto'}}><CardContent sx={{p:1.2}}><Typography variant="overline" sx={{px:1.2}}>Claim Workspace</Typography><List dense>{workspaceSections.map(s=><ListItemButton key={s} selected={section===s} onClick={()=>setSection(s)} sx={{borderRadius:1.5,mb:.3,'&.Mui-selected':{bgcolor:gold,color:'#111'}}}><ListItemText primary={s} primaryTypographyProps={{fontWeight:section===s?900:600}}/></ListItemButton>)}</List></CardContent></Card>
-  <Box><Select fullWidth size="small" value={section} onChange={e=>setSection(e.target.value)} sx={{display:{lg:'none'},mb:2,bgcolor:'#fff'}}>{workspaceSections.map(s=><MenuItem key={s} value={s}>{s}</MenuItem>)}</Select>{content}</Box>
-  <Box sx={{display:{xs:'none',xl:'block'}}}><ReadinessPanel claim={claim} engine={engine} setSection={setSection}/></Box>
- </Box></Box>
-}
-function ClaimIntelligence({claim,assessment,engine,setSection,onOverride}){
- const likelyCause=assessment.cause.replace(/^Reported /i,'').replace(/ event\.$/i,'');
- const scoreRows=[['Evidence quality',engine.scores.evidence],['Technical testing',engine.scores.testing],['Equipment decisions',engine.scores.equipment],['Technical logic',engine.scores.logic],['Policy alignment',engine.scores.policy],['Commercial readiness',engine.scores.commercial]];
- return <Stack spacing={2}>
-  <Panel title="Claim Intelligence Centre" subtitle="One central claim engine controlling technical, evidential, workflow and report status" action={<Chip label={`${engine.confidence}% CLAIM CONFIDENCE`} sx={{bgcolor:engine.confidence>=80?'#dff3e4':gold,fontWeight:900}}/>}>
-   <Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'1.1fr .9fr'},gap:2}}>
-    <Box><Typography variant="overline" color="text.secondary">Overall claim intelligence</Typography><Typography variant="h2" fontWeight={900}>{engine.confidence}%</Typography><LinearProgress variant="determinate" value={engine.confidence} sx={{height:12,borderRadius:8,mb:2}}/><Stack spacing={1.2}>{scoreRows.map(([n,v])=><Box key={n}><Stack direction="row" justifyContent="space-between"><Typography fontWeight={800}>{n}</Typography><Typography fontWeight={900}>{v}%</Typography></Stack><LinearProgress variant="determinate" value={v} sx={{height:7,borderRadius:8}}/></Box>)}</Stack></Box>
-    <Card variant="outlined" sx={{bgcolor:'#111',color:'#fff'}}><CardContent><Typography variant="overline" color="#aaa">Current technical position</Typography><Typography variant="h5" fontWeight={900} sx={{color:gold}}>{likelyCause||'Cause under review'}</Typography><Divider sx={{my:2,borderColor:'#444'}}/><Info label="Canonical claim" value={claim.claim}/><Info label="BEOS record" value={claim.id}/><Info label="Current outcome" value={assessment.outcome}/><Info label="Report control" value={engine.status.report}/></CardContent></Card>
-   </Box>
-  </Panel>
-  <Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'1fr 1fr'},gap:2}}>
-   <Panel title="Missing Evidence & Next Actions" subtitle="Every action opens the exact control requiring attention">{engine.missing.length?<Stack spacing={1}>{engine.missing.map(m=><ListItemButton key={m.key} onClick={()=>setSection(m.target)} sx={{border:'1px solid #ead28b',borderRadius:1.5}}><ListItemText primary={`Complete ${m.label.toLowerCase()} control`} secondary={`Open ${m.target}`} primaryTypographyProps={{fontWeight:800}}/><Chip label="ACTION" color="warning" size="small"/></ListItemButton>)}</Stack>:<Chip label="No mandatory evidence gaps detected" color="success"/>}</Panel>
-   <Panel title="Technical Logic Review" subtitle="Conflicts block report generation unless corrected or formally overridden">{engine.conflicts.length?<Stack spacing={1}>{engine.conflicts.map(c=><Box key={c.id} sx={{p:1.5,borderLeft:'5px solid #d32f2f',bgcolor:'#fff2f2'}}><Typography fontWeight={900}>CONTRADICTION DETECTED</Typography><Typography>{c.message}</Typography><Stack direction="row" spacing={1} sx={{mt:1}}><Button size="small" variant="outlined" onClick={()=>setSection(c.target)}>Correct Record</Button><Button size="small" color="warning" variant="contained" onClick={()=>onOverride(c)}>Technical Override</Button></Stack></Box>)}</Stack>:<Box sx={{p:2,borderLeft:'5px solid #2e7d32',bgcolor:'#eff8f1'}}><Typography fontWeight={900}>No unresolved material contradiction</Typography><Typography variant="body2">The central engine currently finds the assessment, testing and recommendation logically aligned or formally overridden.</Typography></Box>}</Panel>
-  </Box>
-  <Panel title="AI Technical Summary" subtitle="Assessor-controlled interpretation of the canonical claim record"><Typography>{assessment.findings||'Technical findings are still being developed.'}</Typography><Divider sx={{my:2}}/><Typography fontWeight={900}>Provisional technical opinion</Typography><Typography>{assessment.opinion||'Not yet completed.'}</Typography><Stack direction={{xs:'column',sm:'row'}} spacing={1} sx={{mt:2}}><Button variant="contained" onClick={()=>setSection('Assessment')}>Review Assessment</Button><Button variant="outlined" onClick={()=>setSection('Testing')}>Review Testing</Button><Button variant="outlined" onClick={()=>setSection('Reports')}>Open Report Coach</Button></Stack></Panel>
- </Stack>
-}
-function Overview({claim,assessment,exposure,setSection}){return <Stack spacing={2}>
- <Box sx={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:2}}><Metric label="Draft exposure" value={money(exposure)} note="Current BOQ" accent/><Metric label="Photographs" value={claim.photos} note="Evidence records"/><Metric label="Documents" value={claim.docs} note="Controlled files"/><Metric label="Open tasks" value={claim.tasks} note="Operational actions"/></Box>
- <Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'1fr 1fr'},gap:2}}><Panel title="Claim summary"><Info label="Insured" value={claim.insured}/><Info label="Policy" value={claim.policy}/><Info label="Location" value={claim.location}/><Info label="Reported peril" value={claim.peril}/><Info label="Appointment" value={claim.appointment}/></Panel><Panel title="Technical status"><Info label="Cause of loss" value={assessment.cause}/><Info label="Technical opinion" value={assessment.opinion}/><Info label="Recommendation" value={assessment.recommendation}/><Info label="Outcome" value={assessment.outcome}/></Panel></Box>
- <Panel title="Workflow actions" subtitle="Continue work without leaving the claim"><Box sx={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))',gap:1}}>{['Workflow','Assessment','Testing','Equipment','Photos','BOQ','Reports'].map(x=><Button key={x} variant="outlined" onClick={()=>setSection(x)}>Open {x}</Button>)}</Box></Panel>
- </Stack>}
-
-function Workflow({engine,setSection}){
- const done=engine.workflow.filter(x=>x.complete).length;
- return <Stack spacing={2}><Panel title="Claim Operating Workflow" subtitle="All stages are derived from the same central claim state"><LinearProgress variant="determinate" value={engine.status.workflowProgress} sx={{height:12,borderRadius:8,mb:2}}/><Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'repeat(3,1fr)'},gap:1.5}}>{engine.workflow.map((stage,i)=><Card key={stage.name} variant="outlined" sx={{borderLeft:`5px solid ${stage.complete?'#2e7d32':gold}`}}><CardContent><Typography variant="caption" color="text.secondary">STEP {i+1}</Typography><Typography fontWeight={900}>{stage.name}</Typography><Chip size="small" label={stage.complete?'Complete':'Action required'} color={stage.complete?'success':'warning'} sx={{my:1}}/><Button fullWidth variant="outlined" onClick={()=>setSection(stage.target)}>Open</Button></CardContent></Card>)}</Box></Panel><EvidenceScore engine={engine}/></Stack>
-}
-function EvidenceScore({engine}){
- const scores=[['Photographic evidence',engine.scores.evidence],['Testing completeness',engine.scores.testing],['Technical logic',engine.scores.logic],['Policy alignment',engine.scores.policy],['Equipment decisions',engine.scores.equipment]];
- return <Panel title="Technical Evidence Score" subtitle="Derived from the same rules used by workflow and report readiness" action={<Chip label={`${engine.confidence}% CONFIDENCE`} sx={{bgcolor:engine.confidence>=80?'#dff3e4':gold,fontWeight:900}}/>}><Stack spacing={1.5}>{scores.map(([n,v])=><Box key={n}><Stack direction="row" justifyContent="space-between"><Typography fontWeight={800}>{n}</Typography><Typography fontWeight={900}>{v}%</Typography></Stack><LinearProgress variant="determinate" value={v} sx={{height:8,borderRadius:8}}/></Box>)}</Stack></Panel>
-}
-function Insured({claim}){return <Panel title="Insured and contact information" subtitle="Verified claim-party details"><Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'1fr 1fr'},gap:2}}><Field label="Insured name" value={claim.insured}/><Field label="Contact number" value={claim.phone}/><Field label="Email address" value={claim.email}/><Field label="Risk address" value={claim.location}/><Field label="Alternative contact" value=""/><Field label="Access notes" value=""/></Box></Panel>}
-function Policy({claim}){return <Panel title="Policy and insurer instruction"><Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'1fr 1fr'},gap:2}}><Field label="Insurer" value={claim.insurer}/><Field label="Policy number" value={claim.policy}/><Field label="Claim number" value={claim.claim}/><Field label="Reported peril" value={claim.peril}/><Field label="Excess" value="To confirm"/><Field label="Mandate / instruction" value="Assess cause, extent and quantum of loss." multiline rows={4}/></Box></Panel>}
-function Appointment({claim}){return <Stack spacing={2}><Panel title="Appointment control"><Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'1fr 1fr'},gap:2}}><Field label="Appointment" value={claim.appointment}/><Field label="Technician" value={claim.technician}/><Field label="Attendance status" value={claim.appointment==='Completed'?'Completed':'Scheduled'} select><MenuItem value="Scheduled">Scheduled</MenuItem><MenuItem value="Completed">Completed</MenuItem><MenuItem value="Reschedule">Reschedule</MenuItem></Field><Field label="Access confirmation" value="Confirmed"/></Box></Panel><Panel title="Appointment notes"><Field label="Site access, contact and special instructions" value="" multiline rows={6}/></Panel></Stack>}
-function Assessment({assessment,setAssessment}){const upd=k=>e=>setAssessment({...assessment,[k]:e.target.value});return <Panel title="Technical Assessment" subtitle="Structured insurer-ready technical reasoning"><Stack spacing={2}><Field label="Cause of Loss" value={assessment.cause} onChange={upd('cause')} multiline/><Field label="Claimed Damage" value={assessment.claimed} onChange={upd('claimed')} multiline/><Field label="Observed Damage" value={assessment.observed} onChange={upd('observed')} multiline/><Field label="Testing Performed" value={assessment.tests} onChange={upd('tests')} multiline/><Field label="Technical Findings" value={assessment.findings} onChange={upd('findings')} multiline rows={5}/><Field label="Policy Considerations" value={assessment.policy} onChange={upd('policy')} multiline/><Field label="Technical Opinion" value={assessment.opinion} onChange={upd('opinion')} multiline rows={5}/><Field label="Recommendations" value={assessment.recommendation} onChange={upd('recommendation')} multiline/><Field label="Final Outcome" value={assessment.outcome} onChange={upd('outcome')} select><MenuItem value="Pending">Pending</MenuItem><MenuItem value="Authorise">Authorise</MenuItem><MenuItem value="Partially authorise">Partially authorise</MenuItem><MenuItem value="Repudiate">Repudiate</MenuItem><MenuItem value="Further testing">Further testing</MenuItem></Field></Stack></Panel>}
-function Testing({rows,setRows}){const update=(i,k,v)=>setRows(rows.map((r,x)=>x===i?{...r,[k]:v}:r));return <Panel title="Testing Register" subtitle="Measured readings and objective results" action={<Button variant="outlined" onClick={()=>setRows([...rows,{test:'',reading:'',expected:'',unit:'',status:'Pending',notes:''}])}>Add Test</Button>}><Box sx={{overflowX:'auto'}}><Table size="small" sx={{minWidth:900}}><TableHead><TableRow>{['Test','Reading','Expected','Unit','Result','Notes'].map(h=><TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{rows.map((r,i)=><TableRow key={i}>{['test','reading','expected','unit'].map(k=><TableCell key={k}><TextField variant="standard" value={r[k]} onChange={e=>update(i,k,e.target.value)}/></TableCell>)}<TableCell><Select variant="standard" value={r.status} onChange={e=>update(i,'status',e.target.value)}><MenuItem value="Pass">Pass</MenuItem><MenuItem value="Fail">Fail</MenuItem><MenuItem value="Pending">Pending</MenuItem></Select></TableCell><TableCell><TextField variant="standard" value={r.notes} onChange={e=>update(i,'notes',e.target.value)}/></TableCell></TableRow>)}</TableBody></Table></Box></Panel>}
-function Equipment({rows,setRows}){const update=(i,k,v)=>setRows(rows.map((r,x)=>x===i?{...r,[k]:v}:r));return <Panel title="Equipment Register" subtitle="Asset identification, condition and decision" action={<Button variant="outlined" onClick={()=>setRows([...rows,{item:'',make:'',model:'',serial:'',age:'',condition:'',decision:'Pending'}])}>Add Equipment</Button>}><Stack spacing={1.5}>{rows.map((r,i)=><Card variant="outlined" key={i}><CardContent><Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'repeat(3,1fr)'},gap:1.5}}>{['item','make','model','serial','age','condition'].map(k=><Field key={k} label={k[0].toUpperCase()+k.slice(1)} value={r[k]} onChange={e=>update(i,k,e.target.value)}/>)}<Field label="Decision" value={r.decision} onChange={e=>update(i,'decision',e.target.value)} select><MenuItem value="Pending">Pending</MenuItem><MenuItem value="Repair">Repair</MenuItem><MenuItem value="Replace">Replace</MenuItem><MenuItem value="No insured damage">No insured damage</MenuItem></Field></Box></CardContent></Card>)}</Stack></Panel>}
-function Measurements(){return <Panel title="Measurements and Site Data" subtitle="Capture dimensions, quantities and readings"><Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'repeat(3,1fr)'},gap:2}}><Field label="Area / equipment" value=""/><Field label="Measurement" value=""/><Field label="Unit" value="mm / m / m²"/><Field label="Length" value=""/><Field label="Width" value=""/><Field label="Height / depth" value=""/></Box><TextField sx={{mt:2}} fullWidth label="Measurement notes" multiline minRows={6}/></Panel>}
-function Photos({claim}){return <Stack spacing={2}><Panel title="Photo & Evidence Manager" subtitle="Classification, captions and report selection" action={<Button variant="contained">Add Photographs</Button>}><Box sx={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:1.5}}>{['Overview','Damage close-up','Installation','Testing','Compliance','Serial number'].map((x,i)=><Card variant="outlined" key={x}><Box sx={{height:120,bgcolor:i%2?'#e5e5e5':'#d7d7d7',display:'grid',placeItems:'center'}}><Typography color="text.secondary">Photo placeholder</Typography></Box><CardContent><Typography fontWeight={900}>{x}</Typography><Typography variant="body2" color="text.secondary">AI caption pending review</Typography><Stack direction="row" spacing={1} sx={{mt:1}}><Chip size="small" label="Evidence"/><Chip size="small" label="Report" variant="outlined"/></Stack></CardContent></Card>)}</Box></Panel><Panel title="Evidence summary"><Info label="Photographs indexed" value={claim.photos}/><Info label="Selected for report" value="6"/><Info label="Captions reviewed" value="Pending"/></Panel></Stack>}
-function Boq({rows,setRows}){const update=(i,k,v)=>setRows(rows.map((r,x)=>x===i?{...r,[k]:v}:r));const total=rows.reduce((s,r)=>s+(+r.qty||0)*(+r.rate||0),0);const vat=total*.15;return <Panel title="Bill of Quantities" subtitle="Materials, labour and controlled commercial scope" action={<Button variant="outlined" onClick={()=>setRows([...rows,{description:'',category:'Materials',qty:1,rate:0}])}>Add BOQ Item</Button>}><Box sx={{overflowX:'auto'}}><Table size="small" sx={{minWidth:820}}><TableHead><TableRow><TableCell>Description</TableCell><TableCell>Category</TableCell><TableCell>Qty</TableCell><TableCell>Rate</TableCell><TableCell>Amount</TableCell></TableRow></TableHead><TableBody>{rows.map((r,i)=><TableRow key={i}><TableCell><TextField variant="standard" fullWidth value={r.description} onChange={e=>update(i,'description',e.target.value)}/></TableCell><TableCell><Select variant="standard" value={r.category} onChange={e=>update(i,'category',e.target.value)}><MenuItem value="Materials">Materials</MenuItem><MenuItem value="Labour">Labour</MenuItem><MenuItem value="Testing">Testing</MenuItem><MenuItem value="Documentation">Documentation</MenuItem></Select></TableCell><TableCell><TextField variant="standard" type="number" value={r.qty} onChange={e=>update(i,'qty',e.target.value)}/></TableCell><TableCell><TextField variant="standard" type="number" value={r.rate} onChange={e=>update(i,'rate',e.target.value)}/></TableCell><TableCell>{money((+r.qty||0)*(+r.rate||0))}</TableCell></TableRow>)}</TableBody></Table></Box><Box sx={{mt:2,p:2,bgcolor:'#111',color:'#fff',borderRadius:2}}><Stack direction="row" justifyContent="space-between"><Typography>Subtotal</Typography><Typography>{money(total)}</Typography></Stack><Stack direction="row" justifyContent="space-between"><Typography>VAT 15%</Typography><Typography>{money(vat)}</Typography></Stack><Divider sx={{my:1,borderColor:'#555'}}/><Stack direction="row" justifyContent="space-between"><Typography fontWeight={900}>Total Including VAT</Typography><Typography variant="h6" color={gold} fontWeight={900}>{money(total+vat)}</Typography></Stack></Box></Panel>}
-function Commercial({claim,exposure}){return <Stack spacing={2}><Box sx={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:2}}><Metric label="Draft BOQ" value={money(exposure)} note="Excluding VAT" accent/><Metric label="Claim reserve" value={money(claim.value)} note="Recorded reserve"/><Metric label="Variance" value={money(exposure-claim.value)} note="Draft less reserve"/></Box><Panel title="Commercial governance"><Info label="Pricing source" value="BEP master price library"/><Info label="Margin visibility" value="Internal only"/><Info label="VAT treatment" value="15% where applicable"/><Info label="Approval state" value="Draft — not authorised"/></Panel></Stack>}
-function Procurement(){return <Panel title="Procurement Control" subtitle="Requisitions, supplier comparison and purchase-order readiness"><Table size="small"><TableHead><TableRow><TableCell>Requirement</TableCell><TableCell>Supplier</TableCell><TableCell>Status</TableCell><TableCell>Control</TableCell></TableRow></TableHead><TableBody>{[['Replacement equipment','Not selected','Pending','Insurer approval required'],['Installation materials','Not selected','Pending','BOQ confirmation required']].map(r=><TableRow key={r[0]}>{r.map(x=><TableCell key={x}>{x}</TableCell>)}</TableRow>)}</TableBody></Table></Panel>}
-function Reports({claim,assessment,engine,setSection}){
- const outputs=[['Technical Assessment','Primary'],['Second Opinion','Controlled'],['Repudiation Report','Controlled'],['Validation Report','Controlled'],['BOQ / Quotation','Commercial'],['Insurer Response','Controlled']];
- return <Stack spacing={2}><Panel title="Basithami Report Engine" subtitle="Final outputs are locked until the central claim engine passes every mandatory control" action={<Chip label={engine.reportReady?'REPORT READY':'REPORT LOCKED'} color={engine.reportReady?'success':'warning'}/>}>
- <Box sx={{display:'grid',gridTemplateColumns:{xs:'1fr',md:'repeat(3,1fr)'},gap:2}}>{outputs.map(([n,s])=><Card variant="outlined" key={n}><CardContent><Typography fontWeight={900}>{n}</Typography><Chip label={s} size="small" sx={{my:1}}/><Tooltip title={engine.reportReady?'Generate controlled draft':'Resolve outstanding readiness controls before generating a final report'}><span><Button fullWidth variant="outlined" disabled={!engine.reportReady}>Generate</Button></span></Tooltip></CardContent></Card>)}</Box>
- <Box sx={{mt:2,p:2,bgcolor:'#f6f6f6',borderRadius:2}}><Info label="Claim" value={claim.claim}/><Info label="Technical opinion" value={assessment.opinion?'Captured':'Outstanding'}/><Info label="Recommendation" value={assessment.recommendation?'Captured':'Outstanding'}/><Info label="Outcome" value={assessment.outcome}/><Info label="Central report status" value={engine.status.report}/></Box></Panel>
- {!engine.reportReady&&<Panel title="Report Coach" subtitle="Complete these controls before report generation"><Stack spacing={1}>{engine.checks.filter(c=>!c.complete).map(c=><ListItemButton key={c.key} onClick={()=>setSection(c.target)} sx={{border:'1px solid #ead28b',borderRadius:1.5}}><ListItemText primary={c.label} secondary={`Open ${c.target}`} primaryTypographyProps={{fontWeight:900}}/><Chip label="REQUIRED" color="warning" size="small"/></ListItemButton>)}</Stack></Panel>}
- </Stack>
-}
-function DecisionOverrides({overrides,setOverrides}){
- const deactivate=i=>setOverrides(overrides.map((o,x)=>x===i?{...o,active:false}:o));
- return <Panel title="Technical Decision Override Register" subtitle="Every override records the rule, reason, assessor and timestamp">{overrides.length?<Stack spacing={1.5}>{overrides.map((o,i)=><Card key={`${o.ruleId}-${i}`} variant="outlined" sx={{borderLeft:`5px solid ${o.active!==false?gold:'#999'}`}}><CardContent><Stack direction={{xs:'column',md:'row'}} justifyContent="space-between" spacing={1}><Box><Typography fontWeight={900}>{o.ruleId}</Typography><Typography variant="body2">{o.message}</Typography></Box><Chip label={o.active!==false?'ACTIVE OVERRIDE':'WITHDRAWN'} color={o.active!==false?'warning':'default'}/></Stack><Divider sx={{my:1}}/><Info label="Technical reason" value={o.reason}/><Info label="Assessor" value={o.assessor}/><Info label="Recorded" value={o.createdAt}/>{o.active!==false&&<Button sx={{mt:1}} variant="outlined" color="error" onClick={()=>deactivate(i)}>Withdraw Override</Button>}</CardContent></Card>)}</Stack>:<Typography color="text.secondary">No technical overrides have been recorded for this claim.</Typography>}</Panel>
-}
-
-function Emails({claim}){return <Panel title="Claim Communications" subtitle="Insurer, insured and supplier correspondence"><Stack spacing={1.5}><Card variant="outlined"><CardContent><Typography fontWeight={900}>Draft insurer update</Typography><Typography variant="body2" color="text.secondary">To: Claims handler · Re: {claim.claim}</Typography><TextField fullWidth multiline minRows={7} sx={{mt:2}} value={`Good day,\n\nPlease find the current technical status for claim ${claim.claim}. The assessment remains in progress and the formal report will follow after completion of evidence review.\n\nKind regards,\nBasithami Trading & Projects`}/><Stack direction="row" spacing={1} sx={{mt:1}}><Button variant="outlined">Save Draft</Button><Button variant="contained">Open in Email</Button></Stack></CardContent></Card></Stack></Panel>}
-function Documents({claim}){return <Panel title="Controlled Document Index"><Table size="small"><TableHead><TableRow><TableCell>Category</TableCell><TableCell>Document</TableCell><TableCell>Revision</TableCell><TableCell>Status</TableCell></TableRow></TableHead><TableBody>{[['Appointment','Insurer instruction','0','Received'],['Assessment','Technical assessment','1','In progress'],['Commercial','BOQ working draft','0','Draft'],['Evidence',`${claim.photos} photographic records`,'—','Indexed']].map(r=><TableRow key={r[0]}>{r.map(x=><TableCell key={x}>{x}</TableCell>)}</TableRow>)}</TableBody></Table></Panel>}
-function Timeline({claim}){return <Panel title="Claim Timeline"><Stack spacing={1.2}>{[['Claim registered','Office Administration'],['Appointment confirmed',claim.assessor],['Site inspection allocated',claim.technician],['Evidence indexed',`${claim.photos} photographs`],['Current workflow stage',claim.stage]].map(([a,b],i)=><Box key={a} sx={{p:2,borderLeft:'4px solid',borderColor:i===4?gold:'#bbb',bgcolor:'#f7f7f7'}}><Typography fontWeight={900}>{a}</Typography><Typography color="text.secondary">{b}</Typography></Box>)}</Stack></Panel>}
-function Audit({claim}){return <Panel title="Audit Trail" subtitle="Append-only operational events"><Table size="small"><TableHead><TableRow><TableCell>User</TableCell><TableCell>Action</TableCell><TableCell>Record</TableCell><TableCell>Time</TableCell></TableRow></TableHead><TableBody>{[['P Getyeza','Opened workspace',claim.claim,'Now'],['System','Loaded claim record',claim.id,'Now'],['Office Admin','Registered claim',claim.claim,'Initial event']].map(r=><TableRow key={r.join()}>{r.map(x=><TableCell key={x}>{x}</TableCell>)}</TableRow>)}</TableBody></Table></Panel>}
-function ReadinessPanel({claim,engine,setSection}){
- return <Card sx={{position:{xl:'sticky'},top:{xl:82},height:'fit-content',borderTop:`4px solid ${gold}`}}><CardContent>
-  <Stack direction="row" justifyContent="space-between" alignItems="center"><Box><Typography variant="h6" fontWeight={900}>Report Readiness</Typography><Typography variant="body2" color="text.secondary">Central claim-engine control</Typography></Box><Chip label={`${engine.readiness}%`} sx={{bgcolor:engine.reportReady?'#dff3e4':gold,fontWeight:900}}/></Stack>
-  <LinearProgress variant="determinate" value={engine.readiness} sx={{mt:2,height:9,borderRadius:8}}/>
-  <Stack spacing={.4} sx={{mt:2}}>{engine.checks.map(c=><ListItemButton key={c.key} onClick={()=>setSection(c.target)} sx={{borderRadius:1.5,px:1.2}}><ListItemText primary={c.label} secondary={c.complete?'Complete':'Action required'} primaryTypographyProps={{fontWeight:800}}/><Chip size="small" label={c.complete?'✓':'!'} color={c.complete?'success':'warning'}/></ListItemButton>)}</Stack>
-  <Divider sx={{my:2}}/><Typography variant="caption" color="text.secondary">Canonical controls</Typography><Info label="BEOS record" value={claim.id}/><Info label="Insurer claim" value={claim.claim}/><Info label="Workflow" value={`${engine.status.workflowProgress}%`}/><Info label="Report status" value={engine.status.report}/>
-  <Tooltip title={engine.reportReady?'Open report engine':'Final report generation remains locked'}><span><Button fullWidth variant="contained" sx={{mt:2}} onClick={()=>setSection('Reports')} disabled={!engine.reportReady}>Prepare Report</Button></span></Tooltip>
- </CardContent></Card>
-}
-function AiPanel({claim,assessment,setSection,compact=false}){const prompts=[['Draft technical opinion','Assessment'],['Build BOQ','BOQ'],['Analyse photos','Photos'],['Generate report','Reports'],['Draft insurer email','Emails'],['Review policy position','Policy']];return <Card sx={{position:{xl:'sticky'},top:{xl:82},height:'fit-content',borderTop:`4px solid ${gold}`}}><CardContent><Stack direction="row" justifyContent="space-between"><Box><Typography variant="h6" fontWeight={900}>BEP AI Assistant</Typography><Typography variant="body2" color="text.secondary">Claim-aware technical support</Typography></Box><Chip label="CONTROLLED" size="small" sx={{bgcolor:gold}}/></Stack><Box sx={{my:2,p:2,bgcolor:'#111',color:'#fff',borderRadius:2}}><Typography variant="caption" color="#aaa">Active claim</Typography><Typography fontWeight={900}>{claim.claim}</Typography><Typography variant="body2">{claim.insured} · {claim.peril}</Typography></Box><Stack spacing={1}>{prompts.slice(0,compact?6:6).map(([p,t])=><Button key={p} variant="outlined" fullWidth onClick={()=>setSection(t)}>{p}</Button>)}</Stack><TextField sx={{mt:2}} fullWidth multiline minRows={compact?3:5} label="Ask about this claim" placeholder="Example: prepare a technical causation summary"/><Button sx={{mt:1}} fullWidth variant="contained">Run Assistant</Button><Typography variant="caption" color="text.secondary" display="block" sx={{mt:1}}>AI output requires assessor review before issue.</Typography>{!compact&&<Box sx={{mt:2}}><Info label="Outcome" value={assessment.outcome}/></Box>}</CardContent></Card>}
-
-function Placeholder({title,subtitle}){return <Box sx={{p:{xs:2,md:4}}}><Typography variant="h4" fontWeight={900}>{title}</Typography><Typography color="text.secondary" sx={{mb:3}}>{subtitle}</Typography><Panel title="Module foundation active"><Typography>This module remains in the controlled implementation queue after completion of the Digital Claim Workspace.</Typography></Panel></Box>}
-function Shell(){const nav=useNavigate();const location=useLocation();const [mobile,setMobile]=useState(false);const title=menu.find(([,p])=>location.pathname.startsWith(p))?.[0]||'Dashboard';const drawer=<><Box sx={{p:3}}><Typography variant="h5" sx={{color:gold,fontWeight:900}}>BASITHAMI</Typography><Typography>Enterprise Operating System</Typography><Typography variant="caption" color="#aaa">BEP Claims & Technical Assessments · Build 011 Sprint 2</Typography></Box><Divider sx={{borderColor:'#333'}}/><List sx={{p:2}}>{menu.map(([l,p])=><ListItemButton key={p} selected={location.pathname.startsWith(p)} onClick={()=>{nav(p);setMobile(false)}} sx={{borderRadius:2,mb:1,'&.Mui-selected':{bgcolor:gold,color:'#111'}}}><ListItemText primary={l} primaryTypographyProps={{fontWeight:700}}/></ListItemButton>)}</List></>;
- return <Box sx={{display:'flex',minHeight:'100vh'}}><Drawer variant="permanent" sx={{display:{xs:'none',md:'block'},width:drawerWidth,'& .MuiDrawer-paper':{width:drawerWidth,bgcolor:'#111',color:'#fff'}}}>{drawer}</Drawer><Drawer open={mobile} onClose={()=>setMobile(false)} sx={{display:{md:'none'},'& .MuiDrawer-paper':{width:drawerWidth,bgcolor:'#111',color:'#fff'}}}>{drawer}</Drawer><Box component="main" sx={{flexGrow:1,minWidth:0}}><AppBar position="sticky" color="inherit" elevation={0} sx={{borderBottom:'1px solid #ddd'}}><Toolbar><Button onClick={()=>setMobile(true)} sx={{display:{md:'none'},mr:1}}>Menu</Button><Typography fontWeight={900} sx={{flexGrow:1}}>{title}</Typography><Tooltip title="Search across claims, documents and equipment"><Button>Global Search</Button></Tooltip><Avatar sx={{ml:1,bgcolor:gold,color:'#111',fontWeight:900}}>PG</Avatar></Toolbar></AppBar><Routes><Route path="/dashboard" element={<Dashboard/>}/><Route path="/claims" element={<Claims/>}/><Route path="/claims/:id" element={<ClaimWorkspace/>}/><Route path="/commercial" element={<Placeholder title="Commercial Engine" subtitle="BOQs, estimates, quotations and pricing intelligence."/>}/><Route path="/procurement" element={<Placeholder title="Procurement" subtitle="Requisitions, supplier comparisons and purchase orders."/>}/><Route path="/projects" element={<Placeholder title="Projects" subtitle="Scheduling, progress, variations and completion control."/>}/><Route path="/documents" element={<Placeholder title="Documents" subtitle="Controlled document and evidence repository."/>}/><Route path="/knowledge" element={<Placeholder title="Technical Knowledge Base" subtitle="Basithami assessment methodology, precedents and technical references."/>}/><Route path="/administration" element={<Placeholder title="Administration" subtitle="Users, roles, settings and system control."/>}/><Route path="*" element={<Navigate to="/dashboard" replace/>}/></Routes></Box></Box>}
-export default function App(){return <Shell/>}
