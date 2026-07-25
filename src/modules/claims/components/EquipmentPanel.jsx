@@ -1,3 +1,4 @@
+import EquipmentSelector from "./EquipmentSelector";
 import {
   Add,
   DeleteOutline
